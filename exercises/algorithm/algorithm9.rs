@@ -2,7 +2,6 @@
 	heap
 	This question requires you to implement a binary heap function
 */
-// I AM NOT DONE
 
 use std::cmp::Ord;
 use std::default::Default;
@@ -18,7 +17,7 @@ where
 
 impl<T> Heap<T>
 where
-    T: Default,
+    T: Default + Ord,
 {
     pub fn new(comparator: fn(&T, &T) -> bool) -> Self {
         Self {
@@ -38,6 +37,14 @@ where
 
     pub fn add(&mut self, value: T) {
         //TODO
+        self.count += 1;
+        self.items.push(value);
+        let mut idx = self.count;
+        while idx > 1 && (self.comparator)(&self.items[idx], &self.items[self.parent_idx(idx)]) {
+            let pdx = self.parent_idx(idx);
+            self.items.swap(idx,  pdx);
+            idx = self.parent_idx(idx);
+        }
     }
 
     fn parent_idx(&self, idx: usize) -> usize {
@@ -57,8 +64,14 @@ where
     }
 
     fn smallest_child_idx(&self, idx: usize) -> usize {
-        //TODO
-		0
+        let left = self.left_child_idx(idx);
+        let right = self.right_child_idx(idx);
+
+        if right <= self.count && (self.comparator)(&self.items[right], &self.items[left]) {
+            right
+        } else {
+            left
+        }
     }
 }
 
@@ -79,13 +92,32 @@ where
 
 impl<T> Iterator for Heap<T>
 where
-    T: Default,
+    T: Default + Ord,
 {
     type Item = T;
 
     fn next(&mut self) -> Option<T> {
-        //TODO
-		None
+        if self.is_empty() {
+            return None;
+        }
+
+        self.items.swap(1, self.count);
+        let popped = self.items.pop();
+        self.count -= 1;
+
+        let mut idx = 1;
+        while self.children_present(idx) {
+            let cdx = self.smallest_child_idx(idx);
+
+            if (self.comparator)(&self.items[cdx], &self.items[idx]) {
+                self.items.swap(idx, cdx);
+                idx = cdx;
+            } else {
+                break;
+            }
+        }
+
+        popped
     }
 }
 
